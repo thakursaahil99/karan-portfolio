@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-card: var(--card);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-volt: var(--volt);
+  --color-acid: var(--acid);
+  --color-ink: var(--ink);
+  --color-signal: var(--signal);
+
+  --font-display: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+/* ---------- Tokens: one deliberate dark "control room" theme ---------- */
+:root {
+  --bg: #0a0b0d;
+  --bg-2: #101216;
+  --card: #14171c;
+  --fg: #eceee6;
+  --muted: #8b9099;
+  --line: rgb(236 238 230 / 0.1);
+  --volt: #c8ff2e;
+  --ink: #0a0b0d;
+  --signal: #6c7cff;
+  --acid: #c8ff2e; /* volt used as text: same in dark, deepened in light for contrast */
+  --grid: rgb(236 238 230 / 0.05);
+  --dot: rgb(236 238 230 / 0.12);
+  --trace: rgb(236 238 230 / 0.12);
+  --stroke: rgb(236 238 230 / 0.35);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
+}
+
+/* Day mode: warm paper, ink text, the same volt for fills */
+:root[data-theme="light"] {
+  --bg: #f1f0ea;
+  --bg-2: #e7e6de;
+  --card: #fbfbf7;
+  --fg: #0e1013;
+  --muted: #5c616a;
+  --line: rgb(14 16 19 / 0.12);
+  --signal: #4352e8;
+  --acid: #4f7a00;
+  --grid: rgb(14 16 19 / 0.06);
+  --dot: rgb(14 16 19 / 0.14);
+  --trace: rgb(14 16 19 / 0.16);
+  --stroke: rgb(14 16 19 / 0.3);
+  color-scheme: light;
+}
+
+/* Theme switch: the new theme grows out of the toggle as a circle (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html {
+  background: var(--bg);
+  overflow-x: clip;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--volt);
+  color: var(--ink);
+}
+
+/* Preloader only exists on the first visit of a session (set by the inline boot script). */
+html:not([data-preload]) .preloader {
+  display: none;
+}
+
+/* ---------- Lenis ---------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* ---------- Scrollbar ---------- */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--volt);
+  }
+}
+
+/* ---------- Custom cursor: hide the system pointer only where ours runs ---------- */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html.has-cursor,
+  html.has-cursor a,
+  html.has-cursor button,
+  html.has-cursor [role="button"],
+  html.has-cursor label {
+    cursor: none;
+  }
+  html.has-cursor input,
+  html.has-cursor textarea {
+    cursor: text;
+  }
+}
+
+/* ---------- Film grain over everything ---------- */
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: -50%;
+  z-index: 90;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+/* Static grain (no animation, so no full-screen repaints), and none at all on phones */
+@media (max-width: 767px) {
+  .grain {
+    display: none;
+  }
+}
+
+/* Orbit rings: compositor-only CSS rotation, paused while off screen */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin var(--dur, 60s) linear infinite;
+  animation-direction: var(--dir, normal);
+}
+[data-paused="true"] .spin {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+/* ---------- Blueprint grid backgrounds ---------- */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+.bg-dots {
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Text that is only an outline, filled by volt on hover */
+.text-stroke {
+  -webkit-text-stroke: 1px var(--stroke);
+  color: transparent;
+}
+
+/* Thin rule that draws in from the left when its parent is hovered */
+.hover-rule {
+  background: linear-gradient(var(--volt), var(--volt)) left bottom / 0% 1px no-repeat;
+  transition: background-size 0.6s var(--ease);
+}
+.group:hover .hover-rule,
+.hover-rule:hover {
+  background-size: 100% 1px;
+}
+
+/* Masked full-page screenshot that scrolls inside a browser frame */
+.shot-scroll {
+  transition: transform 6s cubic-bezier(0.45, 0, 0.2, 1);
+}
+.group:hover .shot-scroll {
+  transition-duration: 9s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot-scroll {
+    transition: none !important;
+  }
+}
+
+/* Grid lit by the hero spotlight */
+.bg-grid-hot {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--acid) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--acid) 45%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
